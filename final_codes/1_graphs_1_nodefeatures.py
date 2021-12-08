@@ -18,3 +18,10 @@ print(g.ndata['x'][1])                 # 获取节点1的特征
 print(g.edata['x'][th.tensor([0, 3])] ) # 获取边0和3的特征
 
 # tensor([1, 1], dtype=torch.int32)
+
+#为边添加权重，做成边特征值。
+edges = th.tensor([0, 0, 0, 1]), th.tensor([1, 2, 3, 3])
+weights = th.tensor([0.1, 0.6, 0.9, 0.7])  # 每条边的权重
+g = dgl.graph(edges)
+g.edata['w'] = weights  # 将其命名为 'w'
+print(g)
