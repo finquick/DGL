@@ -117,3 +117,23 @@ G.multi_update_all(funcs, 'sum')
 # 返回更新过的节点特征字典
 return {ntype : G.nodes[ntype].data['h'] for ntype in G.ntypes}
 ```
+
+### __图神经网络forward函数  ~~这一章没通的有点多啊~~__
+expand_as_pair函数对于同构图、异构图、二分图有不同的处理方式。这个位置没太看通。  
+[expand_as_pair函数解析](https://docs.dgl.ai/guide_cn/nn-forward.html#id1)  
+[异质图图卷积模块](https://docs.dgl.ai/guide_cn/nn-heterograph.html)  
+
+
+### __数据下载与处理__
+对zip 和gz文件有方便的方式
+- 拼接文件保存路径
+- 从指定连接（self.url）中下载数据文件，存储到文件保存路径中download函数
+- .zip extract_archive()函数就可以进行解压
+- .gz 文件解压方式可以参考[BitcoinOTCDataset的_extract_gz](https://docs.dgl.ai/_modules/dgl/data/bitcoinotc.html#BitcoinOTCDataset)
+
+
+### __图神经网络HAR实验研究步骤__
+  1. 数据转化成图数据 包括特征送入、图结构节点与边关系送入。（模仿着改，HAR图关系简单，用通道的顺序来做节点）
+  2. 用基本的图神经网络跑一下
+  3. 复现一下TCN+GCN的论文
+  4. 自己提出网络结构，在这上边做其他的实验。
