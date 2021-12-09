@@ -46,8 +46,33 @@ __3.__ 聚合的邻居信息、自身的特征信息计算新的节点特征做�
 
 ### __消息传递 理解总结__
 __1. 消息函数：__ 接收edges，为EdgeBatch实例，接收一批边，代表要根据此对象中的所有边逐次进行更新，更新的时候要用到源节点、目的节点、原有数据值，都可以直接从edges中直接提取。此步骤是以所有的边为核心计算对象。  
-__2. 聚合函数：__ 接收nodes，为NodeBatch实例，接收一批点，代表要根据此对象中的所有点逐次进行更新，更新的时候要用到邻居
+消息函数的计算对象是源、目的、原值，内置消息函数：dgl.function.u_add_v('hu', 'hv', 'he')
+源：hu、目的：hv、新的边值：he
+自定义消息函数：
+def message_func(edges):
+     return {'he': edges.src['hu'] + edges.dst['hv']}
+__2. 聚合函数：__ 接收nodes，为NodeBatch实例，接收一批点，代表要根据此对象中的所有点逐次进行更新，更新的时候要用到邻居信息，由成员属性mailbox 存储收到的节点消息。聚合函数有sum、max、min等。
+dgl.function.sum('m', 'h')
+import torch
+def reduce_func(nodes):
+     return {'h': torch.sum(nodes.mailbox['m'], dim=1)}  
+__3. 更新函数：__ 接收聚合函数里的nodes，对聚合函数结果进行操作，与本节点特征组合输出作为新的节点特征。
 
-__3. 更新函数：__
 
+__4.逐边函数：__ 此函数在不涉及消息传递，单独调用逐边计算。默认情况下此函数会更新所有的边。
+import dgl.function as fn
+graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
+
+__5.update_all函数：__ 此函数是高级API，包含了消息生成、消息聚合、节点特征更新所有操作。
+```python
+def updata_all_example(graph):
+    # 在graph.ndata['ft']中存储结果
+    graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
+                     fn.sum('m', 'ft')) #调用消息函数、聚合函数
+    # 在update_all外调用更新函数
+    final_ft = graph.ndata['ft'] * 2#调用了更新函数
+    return final_ft
+```
+
+消息函数其实不仅仅是更新边的信息，而是生成消息，这个消息里可以包含源、目的、边的数值，只不过是以边的方向进行传递,同时体现在边的特征中。聚合函数负责把算到的结果聚合到节点上，最后节点可以用聚合之做更新操作。
 
