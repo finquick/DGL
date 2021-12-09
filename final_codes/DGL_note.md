@@ -76,3 +76,44 @@ def updata_all_example(graph):
 
 消息函数其实不仅仅是更新边的信息，而是生成消息，这个消息里可以包含源、目的、边的数值，只不过是以边的方向进行传递,同时体现在边的特征中。聚合函数负责把算到的结果聚合到节点上，最后节点可以用聚合之做更新操作。
 
+__6.子图上进行消息传递:__
+
+```python
+nid = [0, 2, 3, 6, 7, 9] #子图节点号
+sg = g.subgraph(nid)    #子图
+sg.update_all(message_func, reduce_func, apply_node_func)#子图消息更新
+```
+子图上先更新一波，而不是在全图上更新。
+这样消息更新分成多步，可以有效的定义不同部分的消息更新策略，控制消息更新的范围。
+
+__7.边上进行消息更新__
+```python
+import dgl.function as fn
+
+# 假定eweight是一个形状为(E, *)的张量，E是边的数量。
+graph.edata['a'] = eweight
+graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
+                 fn.sum('m', 'ft'))
+```
+
+__8.heterogeneous graph异质图__
+ 
+ - 每个关系单独计算  
+ - 所有关系聚合到节点上  
+
+```python
+import dgl.function as fn
+
+for c_etype in G.canonical_etypes:
+    srctype, etype, dsttype = c_etype
+    Wh = self.weight[etype](feat_dict[srctype])
+    # 把它存在图中用来做消息传递
+    G.nodes[srctype].data['Wh_%s' % etype] = Wh
+    # 指定每个关系的消息传递函数：(message_func, reduce_func).
+    # 注意结果保存在同一个目标特征“h”，说明聚合是逐类进行的。
+    funcs[etype] = (fn.copy_u('Wh_%s' % etype, 'm'), fn.mean('m', 'h'))
+# 将每个类型消息聚合的结果相加。
+G.multi_update_all(funcs, 'sum')
+# 返回更新过的节点特征字典
+return {ntype : G.nodes[ntype].data['h'] for ntype in G.ntypes}
+```
